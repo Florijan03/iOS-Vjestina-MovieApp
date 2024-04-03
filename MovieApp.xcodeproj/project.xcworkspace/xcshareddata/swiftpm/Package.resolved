@@ -1,0 +1,23 @@
+{
+  "pins" : [
+    {
+      "identity" : "movieappdata",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/fiveagency/MovieAppData",
+      "state" : {
+        "revision" : "0d476dbdc4e8f6828a4fdaff4fa0b977ab5ebf35",
+        "version" : "2.1.1"
+      }
+    },
+    {
+      "identity" : "purelayout",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/PureLayout/PureLayout.git",
+      "state" : {
+        "revision" : "5561683c96dc49b023c1299bfe4f6fbeed5f8199",
+        "version" : "3.1.9"
+      }
+    }
+  ],
+  "version" : 2
+}
