@@ -5,8 +5,7 @@ import PureLayout
 class MovieDetailsViewController: UIViewController {
     
     //Screen data:
-    
-    let id: Int = 111161
+
     
     let name: String = MovieUseCase().getDetails(id: 111161)!.name
     let summary: String = MovieUseCase().getDetails(id: 111161)!.summary
@@ -26,9 +25,9 @@ class MovieDetailsViewController: UIViewController {
     private var summaryLabel: UILabel!
     private var stackView: UIStackView!
     private var symbolImage: UIImage!
+    private var symbolView: UIView!
+    private var imageView: UIImageView!
 
-    @IBOutlet weak var imageView: UIImageView!
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -37,12 +36,69 @@ class MovieDetailsViewController: UIViewController {
     
     private func buildViews() {
         
-        //create views
+        createViews()
+        styleViews()
+        defineLayout()
+        stackViewFunc()
+  
+    }
+    
+    //MovieDetailsFunctions
+    
+    func formatTime(minutes: Int) -> String {
+        let hours = minutes / 60
+        let remainingMinutes = minutes % 60
         
-        let imageView = UIImageView()
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.contentMode = .scaleToFill
-        imageView.clipsToBounds = true
+        var formattedTime = ""
+        
+        if hours > 0 {
+            formattedTime += "\(hours)h "
+        }
+        
+        if remainingMinutes > 0 || formattedTime.isEmpty {
+            formattedTime += "\(remainingMinutes)m"
+        }
+        
+        return formattedTime
+    }
+    
+    func formatDate(dateString: String) -> String? {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-M-d"
+        
+        guard let date = dateFormatter.date(from: dateString) else {
+            return nil
+        }
+        
+        dateFormatter.dateFormat = "dd/MM/yyyy"
+        let formattedDate = dateFormatter.string(from: date)
+        
+        return formattedDate
+    }
+    
+    func processCategories(categories: [MovieCategoryModel]) -> String {
+        categories.map { $0.localizedTitle }.joined(separator: ", ")
+    }
+
+    
+    func processCrewMembers(crewMembers: [MovieCrewMemberModel]) -> [(name: String, role: String)] {
+        var crew: [(name: String, role: String)] = []
+
+        for member in crewMembers {
+            crew.append((name: member.name, role: member.role))
+        }
+
+        return crew
+    }
+       
+}
+
+
+extension MovieDetailsViewController {
+    
+    func createViews() {
+        
+        imageView = UIImageView()
         view.addSubview(imageView)
         
         ratingLabel = UILabel()
@@ -67,11 +123,37 @@ class MovieDetailsViewController: UIViewController {
         view.addSubview(stackView)
         
         symbolImage = UIImage(systemName: "star.circle.fill")
-        let symbolView = UIImageView(image: symbolImage)
+        symbolView = UIImageView(image: symbolImage)
         imageView.addSubview(symbolView)
-
-        //styleViews
         
+        let imageURL = URL(string: imageURLString)!
+        let session = URLSession(configuration: .default)
+        
+        let downloadPicTask = session.dataTask(with: imageURL) { (data, response, error) in
+            // The download has finished.
+            if let e = error {
+                print("Error downloading image: \(e)")
+            } else {
+                // No errors found.
+                if let res = response as? HTTPURLResponse {
+                    print("Downloaded image with response code \(res.statusCode)")
+                    if let imageData = data {
+                        let image = UIImage(data: imageData)
+                        DispatchQueue.main.async {
+                            self.imageView.image = image
+                        }
+                    } else {
+                        print("Couldn't get image: Image data is nil")
+                    }
+                } else {
+                    print("Couldn't get response code for some reason")
+                }
+            }
+        }
+        downloadPicTask.resume()
+    }
+    
+    func styleViews() {
         view.backgroundColor = .white
         
         let ratingLabelText = NSMutableAttributedString(string: "\(rating) User score")
@@ -100,7 +182,6 @@ class MovieDetailsViewController: UIViewController {
         categoryLabel.attributedText = categoryLabelText
         
         symbolView.tintColor = .gray
-        symbolView.frame.size = CGSize(width: 50, height: 50)
         
         let overviewLabelText = NSMutableAttributedString(string: "Overview")
         overviewLabelText.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: CGFloat(22)), range: NSRange(location: 0, length: 8))
@@ -115,10 +196,12 @@ class MovieDetailsViewController: UIViewController {
         
         stackView.axis = .vertical
         stackView.spacing = 10
-            
-        
-        //defineLayoutForViews
-
+    }
+    
+    func defineLayout() {
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleToFill
+        imageView.clipsToBounds = true
         imageView.autoPinEdge(toSuperviewEdge: .top)
         imageView.autoPinEdge(toSuperviewEdge: .leading)
         imageView.autoPinEdge(toSuperviewEdge: .trailing)
@@ -146,6 +229,7 @@ class MovieDetailsViewController: UIViewController {
         
         symbolView.autoPinEdge(.top, to: .bottom, of: categoryLabel, withOffset: CGFloat(15))
         symbolView.autoPinEdge(.leading, to: .leading, of: categoryLabel)
+        symbolView.autoSetDimensions(to: CGSize(width: 45, height: 45))
 
         overviewLabel.translatesAutoresizingMaskIntoConstraints = false
         overviewLabel.autoPinEdge(.top, to: .bottom, of: imageView, withOffset: CGFloat(25))
@@ -160,7 +244,9 @@ class MovieDetailsViewController: UIViewController {
         stackView.autoPinEdge(.top, to: .bottom, of: summaryLabel, withOffset: CGFloat(30))
         stackView.autoPinEdge(toSuperviewEdge: .leading, withInset: CGFloat(16))
         stackView.autoPinEdge(toSuperviewEdge: .trailing, withInset: CGFloat(16))
-
+    }
+    
+    func stackViewFunc(){
         //implementing stackView data
         var crew: [(name: String, role: String)] = []
         crew = processCrewMembers(crewMembers: crewMembers)
@@ -196,115 +282,53 @@ class MovieDetailsViewController: UIViewController {
             }
         }
         
-        // creating image
+    }
+    
+}
+
+extension MovieDetailsViewController {
+    
+    struct Model {
         
-        let imageURL = URL(string: imageURLString)!
-        let session = URLSession(configuration: .default)
-        
-        let downloadPicTask = session.dataTask(with: imageURL) { (data, response, error) in
-            // The download has finished.
-            if let e = error {
-                print("Error downloading image: \(e)")
-            } else {
-                // No errors found.
-                if let res = response as? HTTPURLResponse {
-                    print("Downloaded image with response code \(res.statusCode)")
-                    if let imageData = data {
-                        let image = UIImage(data: imageData)
-                        DispatchQueue.main.async {
-                            imageView.image = image
-                        }
-                    } else {
-                        print("Couldn't get image: Image data is nil")
-                    }
-                } else {
-                    print("Couldn't get response code for some reason")
-                }
-            }
-        }
-        downloadPicTask.resume()
+        let text: String
         
     }
     
-    //MovieDetailsFunctions
+}
+
+extension MovieDetailsViewController.Model {
     
-    func formatTime(minutes: Int) -> String {
-        let hours = minutes / 60
-        let remainingMinutes = minutes % 60
-        
-        var formattedTime = ""
-        
-        if hours > 0 {
-            formattedTime += "\(hours)h "
-        }
-        
-        if remainingMinutes > 0 || formattedTime.isEmpty {
-            formattedTime += "\(remainingMinutes)m"
-        }
-        
-        return formattedTime
+    init(from model: MovieDetailsModel) {
+        self.init(text: model.name)
     }
     
-    func formatDate(dateString: String) -> String? {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-M-d"
-        
-        guard let date = dateFormatter.date(from: dateString) else {
-            return nil
+}
+
+extension MovieCategoryModel {
+    
+    var localizedTitle: String {
+        switch self {
+        case .action:
+            "Action"
+        case .adventure:
+            "Adventure"
+        case .comedy:
+            "Comedy"
+        case .crime:
+            "Crime"
+        case .drama:
+            "Drama"
+        case .fantasy:
+            "Fantasy"
+        case .romance:
+            "Romance"
+        case .scienceFiction:
+            "Science Fiction"
+        case .thriller:
+            "Thriller"
+        case .western:
+            "Western"
         }
-        
-        dateFormatter.dateFormat = "dd/MM/yyyy"
-        let formattedDate = dateFormatter.string(from: date)
-        
-        return formattedDate
-    }
-
-    func processCategories(categories: [MovieCategoryModel]) -> String {
-        var movieCategories: String = ""
-
-        for category in categories {
-            let categoryName: String
-            switch category {
-            case .action:
-                categoryName = "Action"
-            case .adventure:
-                categoryName = "Adventure"
-            case .comedy:
-                categoryName = "Comedy"
-            case .crime:
-                categoryName = "Crime"
-            case .drama:
-                categoryName = "Drama"
-            case .fantasy:
-                categoryName = "Fantasy"
-            case .romance:
-                categoryName = "Romance"
-            case .scienceFiction:
-                categoryName = "Science Fiction"
-            case .thriller:
-                categoryName = "Thriller"
-            case .western:
-                categoryName = "Western"
-            }
-            if movieCategories.isEmpty{
-                movieCategories.append(categoryName)
-            }
-            else{
-                movieCategories.append(", \(categoryName)")
-            }
-        }
-
-        return movieCategories
     }
     
-    func processCrewMembers(crewMembers: [MovieCrewMemberModel]) -> [(name: String, role: String)] {
-        var crew: [(name: String, role: String)] = []
-
-        for member in crewMembers {
-            crew.append((name: member.name, role: member.role))
-        }
-
-        return crew
-    }
-       
 }
