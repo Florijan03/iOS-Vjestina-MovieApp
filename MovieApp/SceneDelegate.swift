@@ -14,7 +14,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         else { return }
             
         window = UIWindow(windowScene: windowScene) // 2
-        let vc = MovieDetailsViewController() // 3
+        let vc = MovieListCategoryViewController() // 3
         window?.rootViewController = vc // 4
         window?.makeKeyAndVisible()
     }
