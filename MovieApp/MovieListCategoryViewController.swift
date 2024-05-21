@@ -2,14 +2,29 @@ import UIKit
 import PureLayout
 import MovieAppData
 
+
 class MovieListCategoryViewController: UIViewController {
 
     private var tableView: UITableView!
     private let movieUseCase = MovieUseCase()
+    public var router: AppRouterProtocol!
 
+
+    // Inicijalizacija s Routerom
+    init(router: AppRouterProtocol) {
+        super.init(nibName: nil, bundle: nil)
+        self.router = router
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         buildViews()
+        navigationItem.title = "Movie List"
+        
     }
 
     private func buildViews() {
@@ -17,9 +32,15 @@ class MovieListCategoryViewController: UIViewController {
         styleViews()
         defineLayout()
     }
+    
+    @objc func handleGoToMovieDetailsController(movieId: Int) {
+        router.navigateToMovieDetails(movieId: movieId)
+    }
+    
 }
 
 extension MovieListCategoryViewController: UITableViewDataSource {
+
     
     func numberOfSections(in tableView: UITableView) -> Int {
         return 3 // Tri sekcije
@@ -48,8 +69,14 @@ extension MovieListCategoryViewController: UITableViewDataSource {
         }
 
         cell.configure(with: movies)
+        
+        cell.onMovieSelected = { [weak self] movieId in
+            self?.handleGoToMovieDetailsController(movieId: movieId)
+        }
+        
         return cell
     }
+    
 }
 
 extension MovieListCategoryViewController: UITableViewDelegate {
@@ -74,16 +101,26 @@ extension MovieListCategoryViewController {
     }
 
     func defineLayout() {
-        tableView.autoPinEdgesToSuperviewEdges()
+        tableView.autoPinEdge(toSuperviewEdge: .top)
+        tableView.autoPinEdge(toSuperviewEdge: .bottom)
         tableView.autoPinEdge(toSuperviewEdge: .left, withInset: 15)
+        tableView.autoPinEdge(toSuperviewEdge: .right)
+        
+        
     }
+
+
+    
+
 }
 
-class SectionTableViewCell: UITableViewCell, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+class SectionTableViewCell: UITableViewCell, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate {
 
     var titleLabel: UILabel!
     private var collectionView: UICollectionView!
     private var movies: [MovieModel] = []
+    
+    var onMovieSelected: ((Int) -> Void)?
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -108,7 +145,10 @@ class SectionTableViewCell: UITableViewCell, UICollectionViewDataSource, UIColle
         collectionView.delegate = self
         collectionView.register(MovieCollectionViewCell.self, forCellWithReuseIdentifier: "MovieCell")
         contentView.addSubview(collectionView)
+        
+
     }
+    
 
     func styleViews() {
         titleLabel.textColor = .black
@@ -136,7 +176,9 @@ class SectionTableViewCell: UITableViewCell, UICollectionViewDataSource, UIColle
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "MovieCell", for: indexPath) as! MovieCollectionViewCell
         let movie = movies[indexPath.item]
+    
         cell.configure(with: movie)
+        
         return cell
     }
     
@@ -144,6 +186,13 @@ class SectionTableViewCell: UITableViewCell, UICollectionViewDataSource, UIColle
         let itemWidth: CGFloat = 125
         return CGSize(width: itemWidth, height: itemWidth * 1.5) // Omjer 3:2
     }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let selectedMovieId = movies[indexPath.item].id
+        print("Cell \(indexPath.row + 1) with movieId \(selectedMovieId) is clicked")
+        onMovieSelected?(selectedMovieId)
+      }
+    
 }
 
 class MovieCollectionViewCell: UICollectionViewCell {
@@ -210,3 +259,5 @@ class MovieCollectionViewCell: UICollectionViewCell {
         buttonBackground.autoAlignAxis(toSuperviewAxis: .vertical)
     }
 }
+
+

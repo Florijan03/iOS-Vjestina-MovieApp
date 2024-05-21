@@ -1,18 +1,31 @@
-//
-//  FavoritesViewController.swift
-//  MovieApp
-//
-//  Created by Florijan Stankir on 20.05.2024..
-//
-
 import SwiftUI
+import PureLayout
 
-struct FavoritesViewController: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+class FavoritesViewController: UIViewController {
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        buildViews()
+        
+        navigationItem.title = "Favourites"
+    }
+
+    private func buildViews() {
+        createViews()
+        styleViews()
+        defineLayout()
     }
 }
 
-#Preview {
-    FavoritesViewController()
+extension FavoritesViewController{
+    func createViews(){
+        
+    }
+    func styleViews(){
+        view.backgroundColor = .white
+    }
+    func defineLayout(){
+        
+    }
 }
+

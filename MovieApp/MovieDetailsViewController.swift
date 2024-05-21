@@ -4,18 +4,8 @@ import PureLayout
 
 class MovieDetailsViewController: UIViewController {
     
-    //Screen data:
-
-    
-    let name: String = MovieUseCase().getDetails(id: 111161)!.name
-    let summary: String = MovieUseCase().getDetails(id: 111161)!.summary
-    let imageURLString: String = MovieUseCase().getDetails(id: 111161)!.imageUrl
-    let releaseDate: String = MovieUseCase().getDetails(id: 111161)!.releaseDate
-    let year: Int = MovieUseCase().getDetails(id: 111161)!.year
-    let duration: Int = MovieUseCase().getDetails(id: 111161)!.duration
-    let rating: Double = MovieUseCase().getDetails(id: 111161)!.rating
-    let categories: [MovieCategoryModel] = MovieUseCase().getDetails(id: 111161)!.categories
-    let crewMembers: [MovieCrewMemberModel] = MovieUseCase().getDetails(id: 111161)!.crewMembers
+    // Varijabla za pohranu podataka o filmu
+    private var movieDetails: MovieDetailsModel?
     
     private var ratingLabel: UILabel!
     private var nameLabel: UILabel!
@@ -28,22 +18,35 @@ class MovieDetailsViewController: UIViewController {
     private var symbolView: UIView!
     private var imageView: UIImageView!
 
+    // Inicijalizacija s ID-om filma
+    init(movieId: Int) {
+        super.init(nibName: nil, bundle: nil)
+        self.movieDetails = fetchMovieDetails(movieId: movieId)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    // Dohvaćanje detalja filma
+    private func fetchMovieDetails(movieId: Int) -> MovieDetailsModel? {
+        return MovieUseCase().getDetails(id: movieId)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        buildViews()
+        guard let movieDetails = movieDetails else { return }
+        buildViews(with: movieDetails)
     }
     
-    private func buildViews() {
-        
+    private func buildViews(with details: MovieDetailsModel) {
         createViews()
-        styleViews()
+        styleViews(with: details)
         defineLayout()
-        stackViewFunc()
-  
+        stackViewFunc(with: details.crewMembers)
     }
     
-    //MovieDetailsFunctions
+    // MovieDetailsFunctions
     
     func formatTime(minutes: Int) -> String {
         let hours = minutes / 60
@@ -79,25 +82,19 @@ class MovieDetailsViewController: UIViewController {
     func processCategories(categories: [MovieCategoryModel]) -> String {
         categories.map { $0.localizedTitle }.joined(separator: ", ")
     }
-
     
     func processCrewMembers(crewMembers: [MovieCrewMemberModel]) -> [(name: String, role: String)] {
         var crew: [(name: String, role: String)] = []
-
         for member in crewMembers {
             crew.append((name: member.name, role: member.role))
         }
-
         return crew
     }
-       
 }
-
 
 extension MovieDetailsViewController {
     
     func createViews() {
-        
         imageView = UIImageView()
         view.addSubview(imageView)
         
@@ -125,16 +122,59 @@ extension MovieDetailsViewController {
         symbolImage = UIImage(systemName: "star.circle.fill")
         symbolView = UIImageView(image: symbolImage)
         imageView.addSubview(symbolView)
+    }
+    
+    func styleViews(with details: MovieDetailsModel) {
+        view.backgroundColor = .white
         
-        let imageURL = URL(string: imageURLString)!
+        let ratingLabelText = NSMutableAttributedString(string: "\(details.rating) User score")
+        ratingLabel.font = UIFont.preferredFont(forTextStyle: .body)
+        ratingLabelText.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: CGFloat(18)), range: NSRange(location: 0, length: 3))
+        ratingLabel.attributedText = ratingLabelText
+        ratingLabel.textColor = .white
+        
+        let nameLabelText = NSMutableAttributedString(string: "\(details.name) (\(details.year))")
+        nameLabel.font = UIFont.preferredFont(forTextStyle: .body)
+        nameLabelText.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: CGFloat(22)), range: NSRange(location: 0, length: details.name.count))
+        nameLabel.attributedText = nameLabelText
+        nameLabel.textColor = .white
+        
+        let formattedDate: String = formatDate(dateString: details.releaseDate)!
+        releaseDateLabel.text = "\(formattedDate)"
+        releaseDateLabel.textColor = .white
+        releaseDateLabel.font = UIFont.preferredFont(forTextStyle: .body)
+        
+        let movieCategories: String = processCategories(categories: details.categories)
+        let movieDuration: String = formatTime(minutes: details.duration)
+        categoryLabel.textColor = .white
+        categoryLabel.font = UIFont.preferredFont(forTextStyle: .body)
+        let categoryLabelText = NSMutableAttributedString(string: "\(movieCategories) \(movieDuration)")
+        categoryLabelText.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: CGFloat(18)), range: NSRange(location: movieCategories.count + 1, length: movieDuration.count))
+        categoryLabel.attributedText = categoryLabelText
+        
+        symbolView.tintColor = .gray
+        
+        let overviewLabelText = NSMutableAttributedString(string: "Overview")
+        overviewLabelText.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: CGFloat(22)), range: NSRange(location: 0, length: 8))
+        overviewLabel.attributedText = overviewLabelText
+        overviewLabel.textColor = .black
+        
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = 5
+        let summaryLabelText = NSAttributedString(string: details.summary, attributes: [NSAttributedString.Key.paragraphStyle: paragraphStyle])
+        summaryLabel.attributedText = summaryLabelText
+        summaryLabel.textColor = .black
+        
+        stackView.axis = .vertical
+        stackView.spacing = 10
+        
+        let imageURL = URL(string: details.imageUrl)!
         let session = URLSession(configuration: .default)
         
         let downloadPicTask = session.dataTask(with: imageURL) { (data, response, error) in
-            // The download has finished.
             if let e = error {
                 print("Error downloading image: \(e)")
             } else {
-                // No errors found.
                 if let res = response as? HTTPURLResponse {
                     print("Downloaded image with response code \(res.statusCode)")
                     if let imageData = data {
@@ -151,51 +191,6 @@ extension MovieDetailsViewController {
             }
         }
         downloadPicTask.resume()
-    }
-    
-    func styleViews() {
-        view.backgroundColor = .white
-        
-        let ratingLabelText = NSMutableAttributedString(string: "\(rating) User score")
-        ratingLabel.font = UIFont.preferredFont(forTextStyle: .body)
-        ratingLabelText.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: CGFloat(18)), range: NSRange(location: 0, length: 3))
-        ratingLabel.attributedText = ratingLabelText
-        ratingLabel.textColor = .white
-        
-        let nameLabelText = NSMutableAttributedString(string: "\(name) (\(year))")
-        nameLabel.font = UIFont.preferredFont(forTextStyle: .body)
-        nameLabelText.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: CGFloat(22)), range: NSRange(location: 0, length: name.count))
-        nameLabel.attributedText = nameLabelText
-        nameLabel.textColor = .white
-        
-        let formattedDate: String = formatDate(dateString: releaseDate)!
-        releaseDateLabel.text = "\(formattedDate)"
-        releaseDateLabel.textColor = .white
-        releaseDateLabel.font = UIFont.preferredFont(forTextStyle: .body)
-        
-        let movieCategories: String = processCategories(categories: categories)
-        let movieDuration: String = formatTime(minutes: duration)
-        categoryLabel.textColor = .white
-        categoryLabel.font = UIFont.preferredFont(forTextStyle: .body)
-        let categoryLabelText = NSMutableAttributedString(string: "\(movieCategories) \(movieDuration)")
-        categoryLabelText.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: CGFloat(18)), range: NSRange(location: movieCategories.count + 1, length: movieDuration.count))
-        categoryLabel.attributedText = categoryLabelText
-        
-        symbolView.tintColor = .gray
-        
-        let overviewLabelText = NSMutableAttributedString(string: "Overview")
-        overviewLabelText.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: CGFloat(22)), range: NSRange(location: 0, length: 8))
-        overviewLabel.attributedText = overviewLabelText
-        overviewLabel.textColor = .black
-        
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = 5
-        let summaryLabelText = NSAttributedString(string: summary, attributes: [NSAttributedString.Key.paragraphStyle: paragraphStyle])
-        summaryLabel.attributedText = summaryLabelText
-        summaryLabel.textColor = .black
-        
-        stackView.axis = .vertical
-        stackView.spacing = 10
     }
     
     func defineLayout() {
@@ -246,15 +241,13 @@ extension MovieDetailsViewController {
         stackView.autoPinEdge(toSuperviewEdge: .trailing, withInset: CGFloat(16))
     }
     
-    func stackViewFunc(){
-        //implementing stackView data
-        var crew: [(name: String, role: String)] = []
-        crew = processCrewMembers(crewMembers: crewMembers)
+    func stackViewFunc(with crewMembers: [MovieCrewMemberModel]) {
+        let crew = processCrewMembers(crewMembers: crewMembers)
         
         var currentHorizontalStackView: UIStackView?
         var index: Int = 0
         
-        for member in crew{
+        for member in crew {
             index += 1
             if currentHorizontalStackView == nil || currentHorizontalStackView!.arrangedSubviews.count == 3 {
                 currentHorizontalStackView = UIStackView()
@@ -274,61 +267,39 @@ extension MovieDetailsViewController {
             
             currentHorizontalStackView?.addArrangedSubview(memberLabel)
             
-            //add empty label to align all labels
-            if index == crew.count && index%5 == 0{
+            // Dodavanje praznog labela za poravnanje svih labela
+            if index == crew.count && index % 5 == 0 {
                 let emptyLabel = UILabel()
                 emptyLabel.text = ""
                 currentHorizontalStackView?.addArrangedSubview(emptyLabel)
             }
         }
-        
     }
-    
-}
-
-extension MovieDetailsViewController {
-    
-    struct Model {
-        
-        let text: String
-        
-    }
-    
-}
-
-extension MovieDetailsViewController.Model {
-    
-    init(from model: MovieDetailsModel) {
-        self.init(text: model.name)
-    }
-    
 }
 
 extension MovieCategoryModel {
-    
     var localizedTitle: String {
         switch self {
         case .action:
-            "Action"
+            return "Action"
         case .adventure:
-            "Adventure"
+            return "Adventure"
         case .comedy:
-            "Comedy"
+            return "Comedy"
         case .crime:
-            "Crime"
+            return "Crime"
         case .drama:
-            "Drama"
+            return "Drama"
         case .fantasy:
-            "Fantasy"
+            return "Fantasy"
         case .romance:
-            "Romance"
+            return "Romance"
         case .scienceFiction:
-            "Science Fiction"
+            return "Science Fiction"
         case .thriller:
-            "Thriller"
+            return "Thriller"
         case .western:
-            "Western"
+            return "Western"
         }
     }
-    
 }

@@ -65,10 +65,12 @@ extension MovieListViewController {
     }
 
     func defineLayout() {
-        tableView.autoPinEdgesToSuperviewEdges()
+        tableView.autoPinEdge(toSuperviewEdge: .top)
+        tableView.autoPinEdge(toSuperviewEdge: .bottom)
         tableView.autoPinEdge(toSuperviewEdge: .left, withInset: 15)
         tableView.autoPinEdge(toSuperviewEdge: .right, withInset: 15)
     }
+
 }
 
 class MovieTableViewCell: UITableViewCell {
@@ -149,3 +151,7 @@ class MovieTableViewCell: UITableViewCell {
         summaryLabel.autoPinEdge(toSuperviewEdge: .bottom, withInset: 8)
     }
 }
+
+
+//compositional layout
+//king fischer

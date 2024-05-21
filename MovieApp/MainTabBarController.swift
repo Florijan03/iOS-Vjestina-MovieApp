@@ -1,18 +1,23 @@
-//
-//  MainTabBarController.swift
-//  MovieApp
-//
-//  Created by Florijan Stankir on 20.05.2024..
-//
+import UIKit
 
-import SwiftUI
+class MainTabBarController: UITabBarController {
+    
+    private var router: Router!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        let navigationController = UINavigationController(rootViewController: self)
+        router = Router(navigationController: navigationController)
 
-struct MainTabBarController: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        let movieCategoriesListVC = MovieListCategoryViewController(router: router)
+        let movieListNavController = UINavigationController(rootViewController: movieCategoriesListVC)
+        movieListNavController.tabBarItem = UITabBarItem(title: "Movie list", image: UIImage(systemName: "house"), tag: 0)
+
+        let favoritesVC = FavoritesViewController()
+        let favoritesNavController = UINavigationController(rootViewController: favoritesVC)
+        favoritesNavController.tabBarItem = UITabBarItem(title: "Favorites", image: UIImage(systemName: "heart"), tag: 1)
+        
+        viewControllers = [movieListNavController, favoritesNavController]
     }
-}
-
-#Preview {
-    MainTabBarController()
 }
