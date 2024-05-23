@@ -8,7 +8,9 @@ class MovieListCategoryViewController: UIViewController {
     private var tableView: UITableView!
     private let movieUseCase = MovieUseCase()
     public var router: AppRouterProtocol!
-
+    
+    private var titleLabel: UILabel!
+    private var titleContainer: UIView!
 
     // Inicijalizacija s Routerom
     init(router: AppRouterProtocol) {
@@ -22,9 +24,7 @@ class MovieListCategoryViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        buildViews()
-        navigationItem.title = "Movie List"
-        
+        buildViews()        
     }
 
     private func buildViews() {
@@ -94,22 +94,31 @@ extension MovieListCategoryViewController {
         tableView.delegate = self
         tableView.register(SectionTableViewCell.self, forCellReuseIdentifier: "SectionCell")
         view.addSubview(tableView)
+        
+        titleLabel = UILabel()
+        titleLabel.text = "Movie List"
+        
+        titleContainer = UIView()
+        titleContainer.addSubview(titleLabel)
     }
 
     func styleViews() {
         view.backgroundColor = .white
+        
+        titleLabel.font = UIFont.boldSystemFont(ofSize: 18)
+        titleLabel.textAlignment = .center
     }
 
     func defineLayout() {
-        tableView.autoPinEdge(toSuperviewEdge: .top)
-        tableView.autoPinEdge(toSuperviewEdge: .bottom)
-        tableView.autoPinEdge(toSuperviewEdge: .left, withInset: 15)
-        tableView.autoPinEdge(toSuperviewEdge: .right)
+        tableView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0), excludingEdge: .leading)
+        tableView.autoPinEdge(toSuperviewEdge: .leading, withInset: 15)
         
+        titleLabel.autoPinEdge(toSuperviewEdge: .bottom, withInset: 20)
+        titleLabel.autoPinEdge(toSuperviewEdge: .leading, withInset: 140)
+        
+        self.navigationItem.titleView = titleContainer
         
     }
-
-
     
 
 }

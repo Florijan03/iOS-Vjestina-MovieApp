@@ -17,6 +17,9 @@ class MovieDetailsViewController: UIViewController {
     private var symbolImage: UIImage!
     private var symbolView: UIView!
     private var imageView: UIImageView!
+    
+    //animacije - ratingLabel, nameLabel, releaseDateLabel, categoryLabel, summaryLabel --> 0.2s
+    //animacije - stackView --> fade in 0.3s
 
     // Inicijalizacija s ID-om filma
     init(movieId: Int) {
@@ -28,7 +31,6 @@ class MovieDetailsViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // Dohvaćanje detalja filma
     private func fetchMovieDetails(movieId: Int) -> MovieDetailsModel? {
         return MovieUseCase().getDetails(id: movieId)
     }
@@ -37,6 +39,18 @@ class MovieDetailsViewController: UIViewController {
         super.viewDidLoad()
         guard let movieDetails = movieDetails else { return }
         buildViews(with: movieDetails)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        setupInitialAnimationState()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        animateLabels()
     }
     
     private func buildViews(with details: MovieDetailsModel) {
@@ -273,6 +287,30 @@ extension MovieDetailsViewController {
                 emptyLabel.text = ""
                 currentHorizontalStackView?.addArrangedSubview(emptyLabel)
             }
+        }
+    }
+    
+    func setupInitialAnimationState(){
+        let labels = [ratingLabel, nameLabel, releaseDateLabel, categoryLabel, summaryLabel]
+        for label in labels {
+            label?.transform = CGAffineTransform(translationX: -view.frame.width, y: 0)
+        }
+        stackView.alpha = 0
+    }
+    
+    func animateLabels(){
+        let labels = [ratingLabel, nameLabel, releaseDateLabel, categoryLabel, summaryLabel]
+        UIView.animate(withDuration: 0.2, delay: 0, options: [], animations: {
+            for label in labels {
+                label?.transform = .identity
+            }
+        }, completion: { _ in
+            self.animateStackView()})
+    }
+    
+    func animateStackView(){
+        UIView.animate(withDuration: 0.3) {
+            self.stackView.alpha = 1
         }
     }
 }
