@@ -9,8 +9,6 @@ class MovieListCategoryViewController: UIViewController {
     private let movieUseCase = MovieUseCase()
     public var router: AppRouterProtocol!
     
-    private var titleLabel: UILabel!
-    private var titleContainer: UIView!
 
     // Inicijalizacija s Routerom
     init(router: AppRouterProtocol) {
@@ -25,6 +23,8 @@ class MovieListCategoryViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         buildViews()        
+        
+        navigationItem.title = "Movie list"
     }
 
     private func buildViews() {
@@ -43,32 +43,30 @@ extension MovieListCategoryViewController: UITableViewDataSource {
 
     
     func numberOfSections(in tableView: UITableView) -> Int {
-        return 3 // Tri sekcije
+        return 1
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 1 // Jedan redak po sekciji
+        return 3
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "SectionCell", for: indexPath) as! SectionTableViewCell
-        var movies: [MovieModel] = []
 
-        switch indexPath.section {
+        switch indexPath.item {
         case 0:
-            cell.titleLabel.text = "What's Popular"
-            movies = movieUseCase.popularMovies
+            cell.set(title: "What's Popular", movies: movieUseCase.popularMovies)
+
         case 1:
-            cell.titleLabel.text = "Free To Watch"
-            movies = movieUseCase.freeToWatchMovies
+            cell.set(title: "Free To Watch", movies: movieUseCase.freeToWatchMovies)
+
         case 2:
-            cell.titleLabel.text = "Trending"
-            movies = movieUseCase.trendingMovies
+            cell.set(title: "Trending", movies: movieUseCase.trendingMovies)
+
         default:
             break
         }
 
-        cell.configure(with: movies)
         
         cell.onMovieSelected = { [weak self] movieId in
             self?.handleGoToMovieDetailsController(movieId: movieId)
@@ -95,33 +93,30 @@ extension MovieListCategoryViewController {
         tableView.register(SectionTableViewCell.self, forCellReuseIdentifier: "SectionCell")
         view.addSubview(tableView)
         
-        titleLabel = UILabel()
-        titleLabel.text = "Movie List"
-        
-        titleContainer = UIView()
-        titleContainer.addSubview(titleLabel)
     }
 
     func styleViews() {
         view.backgroundColor = .white
         
-        titleLabel.font = UIFont.boldSystemFont(ofSize: 18)
-        titleLabel.textAlignment = .center
     }
 
     func defineLayout() {
         tableView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0), excludingEdge: .leading)
         tableView.autoPinEdge(toSuperviewEdge: .leading, withInset: 15)
         
-        titleLabel.autoPinEdge(toSuperviewEdge: .bottom, withInset: 20)
-        titleLabel.autoPinEdge(toSuperviewEdge: .leading, withInset: 140)
-        
-        self.navigationItem.titleView = titleContainer
         
     }
     
 
 }
+
+struct SectionViewModel {
+
+    let title: String
+    let movies: [MovieModel]
+
+}
+
 
 class SectionTableViewCell: UITableViewCell, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate {
 
@@ -167,10 +162,25 @@ class SectionTableViewCell: UITableViewCell, UICollectionViewDataSource, UIColle
     func defineLayout() {
         titleLabel.autoPinEdge(toSuperviewEdge: .top, withInset: 8)
 
+        collectionView.contentInset = UIEdgeInsets(top: 0, left: 15, bottom: 0, right: 15)
+        
         collectionView.autoPinEdge(.top, to: .bottom, of: titleLabel, withOffset: 8)
         collectionView.autoPinEdge(toSuperviewEdge: .leading)
         collectionView.autoPinEdge(toSuperviewEdge: .trailing)
         collectionView.autoPinEdge(toSuperviewEdge: .bottom)
+    }
+    
+    func set(viewModel: SectionViewModel) {
+        self.movies = viewModel.movies
+        self.titleLabel.text = viewModel.title
+        collectionView.reloadData()
+    }
+
+    // better use setter like this:
+    func set(title: String, movies: [MovieModel]) {
+        self.movies = movies
+        self.titleLabel.text = title
+        collectionView.reloadData()
     }
 
     func configure(with movies: [MovieModel]) {

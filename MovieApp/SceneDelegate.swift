@@ -5,18 +5,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
     
     var movieId:Int = 111161
-
+    
+    lazy var mainNavigationController = UINavigationController()
+    lazy var router: AppRouterProtocol = Router(navigationController: mainNavigationController)
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else { return }
             
-        window = UIWindow(windowScene: windowScene) 
-        let mainTabBarController = MainTabBarController()
-        
-        let navigationController = UINavigationController(rootViewController: mainTabBarController)
-
-        window?.rootViewController = navigationController
-        window?.makeKeyAndVisible()
+        window = UIWindow(windowScene: windowScene)
+        router.setStartScreen(in: window)
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

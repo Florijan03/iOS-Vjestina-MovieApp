@@ -18,6 +18,10 @@ class MovieDetailsViewController: UIViewController {
     private var symbolView: UIView!
     private var imageView: UIImageView!
     
+    var labels: [UILabel] {
+        [ratingLabel, nameLabel, releaseDateLabel, categoryLabel, summaryLabel]
+    }
+    
     //animacije - ratingLabel, nameLabel, releaseDateLabel, categoryLabel, summaryLabel --> 0.2s
     //animacije - stackView --> fade in 0.3s
 
@@ -291,21 +295,17 @@ extension MovieDetailsViewController {
     }
     
     func setupInitialAnimationState(){
-        let labels = [ratingLabel, nameLabel, releaseDateLabel, categoryLabel, summaryLabel]
         for label in labels {
-            label?.transform = CGAffineTransform(translationX: -view.frame.width, y: 0)
+            label.transform = CGAffineTransform(translationX: -view.frame.width, y: 0)
         }
         stackView.alpha = 0
     }
     
     func animateLabels(){
-        let labels = [ratingLabel, nameLabel, releaseDateLabel, categoryLabel, summaryLabel]
-        UIView.animate(withDuration: 0.2, delay: 0, options: [], animations: {
-            for label in labels {
-                label?.transform = .identity
-            }
-        }, completion: { _ in
-            self.animateStackView()})
+        UIView.animate(withDuration: 0.2, delay: 0, options: [], animations: { [weak self] in
+            self?.labels.forEach { $0.transform = .identity }
+        }, completion: { [weak self] _ in
+            self?.animateStackView()})
     }
     
     func animateStackView(){

@@ -6,13 +6,24 @@ class MovieListViewController: UIViewController {
 
     private var tableView: UITableView!
     private var allMovies: [MovieModel] = []
+    public var router: AppRouterProtocol!
+    
+    init(router: AppRouterProtocol) {
+        super.init(nibName: nil, bundle: nil)
+        self.router = router
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         allMovies = MovieUseCase().allMovies
-
         buildViews()
+        
+        navigationItem.title = "Movie List"
     }
 
     private func buildViews() {
@@ -20,10 +31,15 @@ class MovieListViewController: UIViewController {
         styleViews()
         defineLayout()
     }
+    
+    @objc func handleGoToMovieDetailsController(movieId: Int) {
+        router.navigateToMovieDetails(movieId: movieId)
+    }
+    
 }
 
 extension MovieListViewController: UITableViewDataSource, UITableViewDelegate {
-
+    
     func numberOfSections(in tableView: UITableView) -> Int {
         return allMovies.count
     }
@@ -45,8 +61,10 @@ extension MovieListViewController: UITableViewDataSource, UITableViewDelegate {
         return 160
     }
     
-    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return 10 // Ne radi
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let selectedMovieId = allMovies[indexPath.section].id
+        print("Cell \(indexPath.row + 1) with movieId \(selectedMovieId) is clicked")
+        handleGoToMovieDetailsController(movieId: selectedMovieId)
     }
 
 }
@@ -67,8 +85,8 @@ extension MovieListViewController {
     func defineLayout() {
         tableView.autoPinEdge(toSuperviewEdge: .top)
         tableView.autoPinEdge(toSuperviewEdge: .bottom)
-        tableView.autoPinEdge(toSuperviewEdge: .left, withInset: 15)
-        tableView.autoPinEdge(toSuperviewEdge: .right, withInset: 15)
+        tableView.autoPinEdge(toSuperviewEdge: .leading, withInset: 15)
+        tableView.autoPinEdge(toSuperviewEdge: .trailing, withInset: 15)
     }
 
 }
@@ -135,9 +153,7 @@ class MovieTableViewCell: UITableViewCell {
 
     private func defineLayout() {
         
-        movieImageView.autoPinEdge(toSuperviewEdge: .top)
-        movieImageView.autoPinEdge(toSuperviewEdge: .leading)
-        movieImageView.autoPinEdge(toSuperviewEdge: .bottom)
+        movieImageView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
         movieImageView.autoMatch(.width, to: .height, of: movieImageView)
         movieImageView.autoSetDimension(.width, toSize: 100)
 
