@@ -2,6 +2,50 @@ import UIKit
 import MovieAppData
 import PureLayout
 
+import Foundation
+
+struct MovieDetailsModel: Decodable {
+    let id: Int
+    let name: String
+    let year: Int
+    let rating: Double
+    let releaseDate: String
+    let duration: Int
+    let summary: String
+    let imageUrl: String
+    let categories: [MovieCategoryModel]
+    let crewMembers: [MovieCrewMemberModel]
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case year
+        case rating
+        case releaseDate = "release_date"
+        case duration
+        case summary
+        case imageUrl = "image_url"
+        case categories
+        case crewMembers = "crew_members"
+    }
+}
+
+struct MovieCategoryModel: Decodable {
+    let id: Int
+    let localizedTitle: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case localizedTitle = "localized_title"
+    }
+}
+
+struct MovieCrewMemberModel: Decodable {
+    let id: Int
+    let name: String
+    let role: String
+}
+
 class MovieDetailsViewController: UIViewController {
     
     // Varijabla za pohranu podataka o filmu
@@ -21,22 +65,29 @@ class MovieDetailsViewController: UIViewController {
     var labels: [UILabel] {
         [ratingLabel, nameLabel, releaseDateLabel, categoryLabel, summaryLabel]
     }
-    
-    //animacije - ratingLabel, nameLabel, releaseDateLabel, categoryLabel, summaryLabel --> 0.2s
-    //animacije - stackView --> fade in 0.3s
 
     // Inicijalizacija s ID-om filma
     init(movieId: Int) {
         super.init(nibName: nil, bundle: nil)
-        self.movieDetails = fetchMovieDetails(movieId: movieId)
+        fetchMovieDetails(movieId: movieId)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func fetchMovieDetails(movieId: Int) -> MovieDetailsModel? {
-        return MovieUseCase().getDetails(id: movieId)
+    private func fetchMovieDetails(movieId: Int) {
+        MovieDetailsUseCase().getDetails(id: movieId) { [weak self] result in
+            switch result {
+            case .success(let details):
+                self?.movieDetails = details
+                DispatchQueue.main.async {
+                    self?.buildViews(with: details)
+                }
+            case .failure(let error):
+                print("Failed to fetch movie details: \(error)")
+            }
+        }
     }
 
     override func viewDidLoad() {
@@ -315,29 +366,29 @@ extension MovieDetailsViewController {
     }
 }
 
-extension MovieCategoryModel {
-    var localizedTitle: String {
-        switch self {
-        case .action:
-            return "Action"
-        case .adventure:
-            return "Adventure"
-        case .comedy:
-            return "Comedy"
-        case .crime:
-            return "Crime"
-        case .drama:
-            return "Drama"
-        case .fantasy:
-            return "Fantasy"
-        case .romance:
-            return "Romance"
-        case .scienceFiction:
-            return "Science Fiction"
-        case .thriller:
-            return "Thriller"
-        case .western:
-            return "Western"
-        }
-    }
-}
+//extension MovieCategoryModel {
+//    var localizedTitle: String {
+//        switch self {
+//        case .action:
+//            return "Action"
+//        case .adventure:
+//            return "Adventure"
+//        case .comedy:
+//            return "Comedy"
+//        case .crime:
+//            return "Crime"
+//        case .drama:
+//            return "Drama"
+//        case .fantasy:
+//            return "Fantasy"
+//        case .romance:
+//            return "Romance"
+//        case .scienceFiction:
+//            return "Science Fiction"
+//        case .thriller:
+//            return "Thriller"
+//        case .western:
+//            return "Western"
+//        }
+//    }
+//}
