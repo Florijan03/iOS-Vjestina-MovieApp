@@ -2,50 +2,6 @@ import UIKit
 import MovieAppData
 import PureLayout
 
-import Foundation
-
-struct MovieDetailsModel: Decodable {
-    let id: Int
-    let name: String
-    let year: Int
-    let rating: Double
-    let releaseDate: String
-    let duration: Int
-    let summary: String
-    let imageUrl: String
-    let categories: [MovieCategoryModel]
-    let crewMembers: [MovieCrewMemberModel]
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case name
-        case year
-        case rating
-        case releaseDate = "release_date"
-        case duration
-        case summary
-        case imageUrl = "image_url"
-        case categories
-        case crewMembers = "crew_members"
-    }
-}
-
-struct MovieCategoryModel: Decodable {
-    let id: Int
-    let localizedTitle: String
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case localizedTitle = "localized_title"
-    }
-}
-
-struct MovieCrewMemberModel: Decodable {
-    let id: Int
-    let name: String
-    let role: String
-}
-
 class MovieDetailsViewController: UIViewController {
     
     // Varijabla za pohranu podataka o filmu
@@ -208,8 +164,11 @@ extension MovieDetailsViewController {
         nameLabel.attributedText = nameLabelText
         nameLabel.textColor = .white
         
-        let formattedDate: String = formatDate(dateString: details.releaseDate)!
-        releaseDateLabel.text = "\(formattedDate)"
+        if let formattedDate = formatDate(dateString: details.releaseDate) {
+            releaseDateLabel.text = "\(formattedDate)"
+        } else {
+            releaseDateLabel.text = "N/A" // ili neka zadana vrijednost
+        }
         releaseDateLabel.textColor = .white
         releaseDateLabel.font = UIFont.preferredFont(forTextStyle: .body)
         
@@ -261,6 +220,7 @@ extension MovieDetailsViewController {
         }
         downloadPicTask.resume()
     }
+
     
     func defineLayout() {
         imageView.translatesAutoresizingMaskIntoConstraints = false
